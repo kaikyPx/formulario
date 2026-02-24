@@ -1,0 +1,15 @@
+{
+  "name": "uao-formulario-email",
+  "version": "1.0.0",
+  "description": "Função para envio de email via Resend",
+  "main": "index.js",
+  "dependencies": {
+    "resend": "^3.2.0"
+  },
+  "devDependencies": {
+    "netlify-cli": "^17.0.0"
+  },
+  "scripts": {
+    "start": "netlify dev"
+  }
+}

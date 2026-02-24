@@ -1,0 +1,2883 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Prontuário Digital UAO - 10 idiomas">
+    <title>UAO Digital Health Record | Prontuário Digital</title>
+
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#0a4d4d">
+    <link rel="manifest" href="manifest.json">
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;800&family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="translations.js"></script>
+    <script>
+        // Logo UAO em Base64 (WebP)
+        const UAO_LOGO_BASE64 = 'UAO.jpg'; // Será carregado localmente
+
+        // ==========================================
+        // CONFIGURAÇÃO DROPBOX
+        // ==========================================
+        const DROPBOX_CONFIG = {
+            token: 'sl.u.AGNBJGU2zqT5oauc1CC2hzJ8ugh8yUGLOr5Y_PdyOwsr_KRdob-R0jDdqVXX65o5hMmOsgJZtckPZLl8-vFW9btDqQVKFg_GvVCGNae8wr4T4xbDUiWo-l_7Ot2ggmT3AeU-EisBGStUmAdNy6AJP4MggUYoB7MvlaJLdQ6GiI-YzTCdzmzQPaYwzwsHpxER4FEtAM0KlJFz7AzchH_8qif2kKceyD-XEvPQdz3dTl4lXzLJThXojsP5SiyI0VWHvXhaYojNZV246nJOEka6nSvG9Acj8a2z3KFrwQa_Ca_vnG572amJE6Ndas5OrYIJfFMX2Im9COmgVE0QT6tkEzQjNDBHuL72_iJz24Gi-iGa0piheo01psvSi0BxTTk7BRuzPOnut7MgCn8NGa0uaQmoZnDd61iNhh7zxl6ZugoES0KLHEf1qQVuEbVL2AcaPgc3oZiqdR3IIpQkYCZxpJCbtxa7_yeo8Qap6_H0ByUUVAJZveReYHj1ZpBhWscKKm4Q3fW6IUGJYSD5S4MvKww9IuPfMaXZzkPEeIgIWBar-FCWJFcazLtoivM8V43rafB40gsoJCGzyzoKCnoHJdD_FzwXyAM9kuNq15c6_o5rCBm80JNHCqTsd_0aElpEh0NF0D5QKUn0azSMMIAWZDNGXsjQk4kjOXPkDwDm4D9oeoou54vyAX0Z_CTNoWQQUxwGmH_5MS0xcouYzNZ03SEdF3S5nAmLmWlWgZDwmoEVQ_yDQVzsHzPZ4rMYXrd3nmxnOLXaIpWB0H5BB4VPFOWyrrR6KUru0oqo4HL9qbcUa8UqU1bJizzUxht3t-nnZV5S86Bnlz7TyF_4Niy4Op45OgBqNI2rhgtAWE2j7aQcet9QoWgrw-PnU0I3Mskt-4hcjPkzAYMcxnxXKko7n3t8sGKHp-48jdFmAI-8qlSqKwvrU_aU9WwAqezXLg26x5PyaEZx2bT6wQdCXkdgxTMZGuHnk_KM_aLWOTA-p_yQhDT8VDbRBWnkEpYi605rbs1UIzsFfJgmod398S_3Vvx2SV8s6mfDsq7HkNEmzYzYzLbOBmRv1bcHuA1QrqOxnG-SqDpxQqV15XWauFofwrNxORwXl62xmJtwvZINrTQSY6D5HUDWi726_OZFT7C0BoLOGKmPjAuCvWg5XJ-ya00VEA54QBrQz7_bSIpIfy7iHte2EOLjm7SqRWO7WzrwAyZs2KIktUVQONn3-iIJbKNiZrfhmymOe2GT-bLOMO6XQBdrkG_AUJKMXU4lcy584su1pN4nCkpEub-TzLq0c3HNTtZKSdZf-kkJoS58UxvJfg',
+            folder: '' // Vazio = raiz (Apps/UAO-Prontuarios/)
+        };
+    </script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #0a4d4d;
+            --primary-light: #1a6d6d;
+            --accent: #d4a574;
+            --accent-light: #e8c9a5;
+            --bg: #fafaf8;
+            --text: #1a1a1a;
+            --text-light: #666;
+            --border: #e0e0dc;
+            --success: #2d7a4f;
+            --error: #c53030;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* ========================================
+           TELA DE SELEÇÃO DE IDIOMA
+           ======================================== */
+
+        .language-selector-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0a4d4d 0%, #1a6d6d 50%, #2d7a4f 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            animation: fadeIn 0.6s ease;
+            overflow-y: auto;
+            padding: 20px 0;
+        }
+
+        .language-selector-screen.hidden {
+            display: none;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .language-box {
+            background: white;
+            border-radius: 24px;
+            padding: 60px 40px;
+            max-width: 600px;
+            width: 90%;
+            box-shadow: 0 20px 80px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+            margin: auto;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .language-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .language-header .logo-container {
+            margin-bottom: 30px;
+        }
+
+        .language-header .logo {
+            max-width: 200px;
+            height: auto;
+        }
+
+        .language-header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.2em;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 12px;
+            letter-spacing: -1px;
+        }
+
+        .language-header .subtitle {
+            font-size: 1.1em;
+            color: var(--text-light);
+            font-weight: 300;
+        }
+
+        .language-header .multilang-text {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid var(--border);
+            font-size: 0.95em;
+            color: var(--text-light);
+            line-height: 1.8;
+        }
+
+        .language-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-top: 30px;
+        }
+
+        .language-option {
+            background: var(--bg);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 18px 24px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.05em;
+            font-weight: 500;
+        }
+
+        .language-option:hover {
+            transform: translateY(-4px) scale(1.02);
+            border-color: var(--primary);
+            background: white;
+            box-shadow: 0 8px 24px rgba(10, 77, 77, 0.15);
+        }
+
+        .language-option:active {
+            transform: translateY(-2px) scale(1);
+        }
+
+        .language-option .flag {
+            font-size: 2em;
+            line-height: 1;
+        }
+
+        .language-option .name {
+            flex: 1;
+            color: var(--text);
+        }
+
+        /* ========================================
+           AUTO-SAVE INDICATOR
+           ======================================== */
+
+        .autosave-indicator {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: white;
+            padding: 12px 20px;
+            border-radius: 30px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            display: none;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9em;
+            z-index: 1000;
+            animation: slideInRight 0.3s ease;
+        }
+
+        .autosave-indicator.show {
+            display: flex;
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .autosave-indicator .icon {
+            font-size: 1.2em;
+        }
+
+        .autosave-indicator.saving {
+            color: var(--primary);
+        }
+
+        .autosave-indicator.saved {
+            color: var(--success);
+        }
+
+        /* ========================================
+           FORMULÁRIO PRINCIPAL
+           ======================================== */
+
+        .main-app {
+            display: none;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .main-app.active {
+            display: block;
+            animation: fadeIn 0.6s ease;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 60px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+            padding: 40px 40px 50px 40px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 400px;
+            height: 400px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 50%;
+            animation: float 10s ease-in-out infinite;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translate(0, 0);
+            }
+
+            50% {
+                transform: translate(-30px, 30px);
+            }
+        }
+
+        .header-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .header-logo-container {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .header-logo {
+            max-width: 180px;
+            width: 100%;
+            height: auto;
+            object-fit: contain;
+        }
+
+        .language-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            backdrop-filter: blur(10px);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .language-badge:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: scale(1.05);
+        }
+
+        .header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5em;
+            font-weight: 800;
+            margin-bottom: 8px;
+            letter-spacing: -1px;
+        }
+
+        .header .subtitle {
+            font-size: 1.05em;
+            opacity: 0.95;
+            font-weight: 300;
+        }
+
+        .header .doctor-info {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            font-size: 0.95em;
+        }
+
+        .form-content {
+            padding: 50px 40px;
+        }
+
+        .section {
+            margin-bottom: 50px;
+            animation: slideIn 0.6s ease backwards;
+        }
+
+        .section:nth-child(1) {
+            animation-delay: 0.05s;
+        }
+
+        .section:nth-child(2) {
+            animation-delay: 0.1s;
+        }
+
+        .section:nth-child(3) {
+            animation-delay: 0.15s;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .section-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8em;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 28px;
+            padding-bottom: 16px;
+            border-bottom: 3px solid var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .section-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            box-shadow: 0 4px 12px rgba(212, 165, 116, 0.3);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .form-grid-2 {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .form-grid-3 {
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        .form-grid-4 {
+            grid-template-columns: repeat(4, 1fr);
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            font-size: 0.95em;
+            font-weight: 600;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .required {
+            color: var(--error);
+            font-size: 1.2em;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="date"],
+        input[type="tel"],
+        input[type="number"],
+        select,
+        textarea {
+            padding: 14px 18px;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            font-size: 1em;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.3s ease;
+            background: var(--bg);
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: white;
+            box-shadow: 0 0 0 4px rgba(10, 77, 77, 0.08);
+        }
+
+        input.error,
+        select.error,
+        textarea.error {
+            border-color: var(--error);
+        }
+
+        .error-message {
+            color: var(--error);
+            font-size: 0.85em;
+            margin-top: -5px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        small {
+            color: var(--text-light);
+            font-size: 0.85em;
+            line-height: 1.4;
+        }
+
+        .conditional-field {
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+
+        .conditional-field.show {
+            display: block;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .radio-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 20px;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: var(--bg);
+        }
+
+        .radio-option:hover {
+            border-color: var(--primary);
+            background: white;
+        }
+
+        .radio-option input[type="radio"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .radio-option input[type="radio"]:checked {
+            accent-color: var(--primary);
+        }
+
+        .radio-option.selected {
+            border-color: var(--primary);
+            background: white;
+            box-shadow: 0 4px 12px rgba(10, 77, 77, 0.1);
+        }
+
+        .signature-pad-container {
+            background: white;
+            border: 3px solid var(--primary);
+            border-radius: 16px;
+            padding: 24px;
+            margin: 24px 0;
+        }
+
+        .signature-canvas-wrapper {
+            position: relative;
+            background: var(--bg);
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .signature-canvas {
+            display: block;
+            width: 100%;
+            height: 220px;
+            cursor: crosshair;
+        }
+
+        .signature-placeholder {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: var(--text-light);
+            opacity: 0.5;
+            pointer-events: none;
+            text-align: center;
+            font-size: 0.95em;
+        }
+
+        .signature-placeholder.hidden {
+            display: none;
+        }
+
+        .btn {
+            padding: 16px 32px;
+            font-size: 1em;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+            box-shadow: 0 4px 16px rgba(10, 77, 77, 0.25);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(10, 77, 77, 0.35);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg);
+            transform: translateY(-2px);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 16px;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 2px solid var(--border);
+        }
+
+        .success-message {
+            display: none;
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            padding: 40px;
+            border-radius: 16px;
+            text-align: center;
+            margin: 30px 0;
+            border: 2px solid var(--success);
+        }
+
+        .success-message.active {
+            display: block;
+            animation: slideIn 0.6s ease;
+        }
+
+        .success-message h3 {
+            color: var(--success);
+            font-size: 1.8em;
+            margin-bottom: 12px;
+            font-family: 'Playfair Display', serif;
+        }
+
+        .info-box {
+            background: #fff9f0;
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 4px solid var(--accent);
+            margin-bottom: 24px;
+            line-height: 1.7;
+        }
+
+        @media (max-width: 768px) {
+            .language-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .language-box {
+                padding: 40px 24px;
+            }
+
+            .header {
+                padding: 30px 24px 40px 24px;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .header-logo {
+                max-width: 80px;
+            }
+
+            .form-content {
+                padding: 30px 24px;
+            }
+
+            .form-grid,
+            .form-grid-2,
+            .form-grid-3,
+            .form-grid-4 {
+                grid-template-columns: 1fr;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+
+            .autosave-indicator {
+                bottom: 20px;
+                right: 20px;
+                font-size: 0.85em;
+                padding: 10px 16px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- AUTO-SAVE INDICATOR -->
+    <div class="autosave-indicator" id="autosaveIndicator">
+        <span class="icon">💾</span>
+        <span class="text" data-i18n="saving">Salvando...</span>
+    </div>
+
+    <!-- TELA DE SELEÇÃO DE IDIOMA -->
+    <div class="language-selector-screen" id="languageSelector">
+        <div class="language-box">
+            <div class="language-header">
+                <div class="logo-container">
+                    <img src="UAO.jpg" class="logo" alt="UAO">
+                </div>
+                <h1>Prontuário Digital</h1>
+                <p class="subtitle">Digital Health Record</p>
+                <div class="multilang-text">
+                    🌍 Please select your language<br>
+                    Selecione o idioma | 选择语言<br>
+                    言語を選択 | اختر اللغة
+                </div>
+            </div>
+
+            <div class="language-grid">
+                <div class="language-option" onclick="selectLanguage('pt')">
+                    <span class="flag">🇧🇷</span>
+                    <span class="name">Português</span>
+                </div>
+                <div class="language-option" onclick="selectLanguage('en')">
+                    <span class="flag">🇺🇸</span>
+                    <span class="name">English</span>
+                </div>
+                <div class="language-option" onclick="selectLanguage('es')">
+                    <span class="flag">🇪🇸</span>
+                    <span class="name">Español</span>
+                </div>
+                <div class="language-option" onclick="selectLanguage('fr')">
+                    <span class="flag">🇫🇷</span>
+                    <span class="name">Français</span>
+                </div>
+                <div class="language-option" onclick="selectLanguage('it')">
+                    <span class="flag">🇮🇹</span>
+                    <span class="name">Italiano</span>
+                </div>
+                <div class="language-option" onclick="selectLanguage('de')">
+                    <span class="flag">🇩🇪</span>
+                    <span class="name">Deutsch</span>
+                </div>
+                <div class="language-option" onclick="selectLanguage('zh')">
+                    <span class="flag">🇨🇳</span>
+                    <span class="name">中文</span>
+                </div>
+                <div class="language-option" onclick="selectLanguage('ja')">
+                    <span class="flag">🇯🇵</span>
+                    <span class="name">日本語</span>
+                </div>
+                <div class="language-option" onclick="selectLanguage('ru')">
+                    <span class="flag">🇷🇺</span>
+                    <span class="name">Русский</span>
+                </div>
+                <div class="language-option" onclick="selectLanguage('ar')">
+                    <span class="flag">🇸🇦</span>
+                    <span class="name">العربية</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- APLICAÇÃO PRINCIPAL -->
+    <div class="main-app" id="mainApp">
+        <div class="container">
+            <div class="header">
+                <div class="header-content">
+                    <div class="header-logo-container">
+                        <img src="UAO.jpg" class="header-logo" alt="UAO" id="headerLogo">
+                        <div class="language-badge" onclick="changeLanguageScreen()">
+                            <span id="currentFlag">🇧🇷</span>
+                            <span id="currentLang">Português</span>
+                            <span>▼</span>
+                        </div>
+                    </div>
+
+                    <h1 data-i18n="title">Ficha de Anamnese</h1>
+                    <p class="subtitle">UAO – Unidade de Atenção Orofacial | CRO-BA 1771</p>
+
+                    <div class="doctor-info">
+                        <strong>Responsável Técnico:</strong> Dr. Pedro Pinto Berenguer | CRO-BA 8322
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-content">
+                <form id="anamneseForm" autocomplete="on">
+
+                    <!-- SEÇÃO 1: DADOS PESSOAIS -->
+                    <div class="section">
+                        <h2 class="section-title">
+                            <span class="section-icon">👤</span>
+                            <span data-i18n="section1_title">Dados Pessoais</span>
+                        </h2>
+
+                        <div class="form-grid">
+                            <div class="form-group full-width">
+                                <label>
+                                    <span data-i18n="fullName">Nome Completo</span>
+                                    <span class="required">*</span>
+                                </label>
+                                <input type="text" name="nome" id="nome" required autocomplete="name">
+                                <span class="error-message" id="nomeError"></span>
+                            </div>
+                        </div>
+
+                        <!-- CAMPO RESIDENTE NO BRASIL -->
+                        <div class="form-group full-width" style="margin-bottom: 30px;">
+                            <label>
+                                <span data-i18n="residentQuestion">Você é residente no Brasil?</span>
+                                <span class="required">*</span>
+                            </label>
+                            <div class="radio-group">
+                                <label class="radio-option" id="residentYes">
+                                    <input type="radio" name="residenteBrasil" value="sim" required
+                                        onchange="toggleResidencyFields(true)">
+                                    <span data-i18n="residentYes">Sim (tenho CPF)</span>
+                                </label>
+                                <label class="radio-option" id="residentNo">
+                                    <input type="radio" name="residenteBrasil" value="nao" required
+                                        onchange="toggleResidencyFields(false)">
+                                    <span data-i18n="residentNo">Não (turista/visitante)</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-grid form-grid-3">
+                            <div class="form-group">
+                                <label>
+                                    <span data-i18n="birthDate">Data de Nascimento</span>
+                                    <span class="required">*</span>
+                                </label>
+                                <input type="date" name="dataNascimento" id="dataNascimento" required
+                                    autocomplete="bday">
+                                <span class="error-message" id="dataNascimentoError"></span>
+                            </div>
+                            <div class="form-group">
+                                <label>
+                                    <span data-i18n="sex">Sexo</span>
+                                    <span class="required">*</span>
+                                </label>
+                                <select name="sexo" id="sexo" required autocomplete="sex">
+                                    <option value="" data-i18n="selectSex">Selecione</option>
+                                    <option value="M" data-i18n="male">Masculino</option>
+                                    <option value="F" data-i18n="female">Feminino</option>
+                                    <option value="outro" data-i18n="other">Outro</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label data-i18n="maritalStatus">Estado Civil</label>
+                                <select name="estadoCivil" autocomplete="off">
+                                    <option value="">Selecione</option>
+                                    <option value="solteiro" data-i18n="single">Solteiro(a)</option>
+                                    <option value="casado" data-i18n="married">Casado(a)</option>
+                                    <option value="divorciado" data-i18n="divorced">Divorciado(a)</option>
+                                    <option value="viuvo" data-i18n="widowed">Viúvo(a)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-grid form-grid-3">
+                            <div class="form-group">
+                                <label data-i18n="weight">Peso (kg)</label>
+                                <input type="number" name="peso" step="0.1" min="0" max="300">
+                            </div>
+                            <div class="form-group">
+                                <label data-i18n="height">Altura (cm)</label>
+                                <input type="number" name="altura" step="1" min="0" max="250">
+                            </div>
+                            <div class="form-group">
+                                <label data-i18n="birthplace">Naturalidade</label>
+                                <input type="text" name="naturalidade">
+                            </div>
+                        </div>
+
+                        <div class="form-grid form-grid-2">
+                            <div class="form-group">
+                                <label data-i18n="profession">Profissão</label>
+                                <input type="text" name="profissao" autocomplete="organization-title">
+                            </div>
+
+                            <!-- CAMPO CPF (SOMENTE RESIDENTES) -->
+                            <div class="form-group conditional-field" id="cpfField">
+                                <label>
+                                    <span data-i18n="cpf">CPF</span>
+                                    <span class="required">*</span>
+                                </label>
+                                <input type="text" name="cpf" id="cpf" maxlength="14" autocomplete="off">
+                                <span class="error-message" id="cpfError">CPF inválido</span>
+                            </div>
+
+                            <!-- CAMPO PASSAPORTE (SOMENTE NÃO-RESIDENTES) -->
+                            <div class="form-group conditional-field" id="passportField">
+                                <label>
+                                    <span data-i18n="passport">Passaporte</span>
+                                    <span class="required">*</span>
+                                </label>
+                                <input type="text" name="passaporte" id="passaporte" maxlength="30" autocomplete="off">
+                            </div>
+                        </div>
+
+                        <!-- PAÍS DE ORIGEM (SOMENTE NÃO-RESIDENTES) -->
+                        <div class="form-grid conditional-field" id="countryField">
+                            <div class="form-group full-width">
+                                <label>
+                                    <span data-i18n="country">País de Origem</span>
+                                    <span class="required">*</span>
+                                </label>
+                                <input type="text" name="pais" id="pais" autocomplete="country">
+                            </div>
+                        </div>
+
+                        <!-- RELIGIÃO E COR DA PELE -->
+                        <div class="form-grid form-grid-2">
+                            <div class="form-group">
+                                <label data-i18n="religion">Religião</label>
+                                <input type="text" name="religiao" placeholder="Católica, Evangélica, etc">
+                            </div>
+                            <div class="form-group">
+                                <label data-i18n="skinColor">Cor da Pele</label>
+                                <select name="corPele">
+                                    <option value="">Selecione</option>
+                                    <option value="branca" data-i18n="white">Branca</option>
+                                    <option value="preta" data-i18n="black">Preta</option>
+                                    <option value="parda" data-i18n="brown">Parda</option>
+                                    <option value="amarela" data-i18n="yellow">Amarela</option>
+                                    <option value="indigena" data-i18n="indigenous">Indígena</option>
+                                    <option value="nao_informar" data-i18n="preferNotToSay">Prefiro não informar
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- CONVÊNIOS -->
+                        <div class="form-grid form-grid-2">
+                            <!-- Convênio Médico/Hospitalar -->
+                            <div class="form-group">
+                                <label data-i18n="medicalInsurance">Convênio Médico/Hospitalar</label>
+                                <input type="text" name="convenioMedico" id="convenioMedico"
+                                    placeholder="Nome do convênio">
+                                <div style="margin-top: 8px;">
+                                    <label class="radio-option" style="display: inline-flex; margin: 0;">
+                                        <input type="checkbox" id="convenioMedico_naoPossuo"
+                                            onchange="toggleNoInsurance('convenioMedico')">
+                                        <span data-i18n="dontHave">Não tenho</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Convênio Odontológico -->
+                            <div class="form-group">
+                                <label data-i18n="dentalInsurance">Convênio Odontológico</label>
+                                <input type="text" name="convenioOdontologico" id="convenioOdontologico"
+                                    placeholder="Nome do convênio">
+                                <div style="margin-top: 8px;">
+                                    <label class="radio-option" style="display: inline-flex; margin: 0;">
+                                        <input type="checkbox" id="convenioOdontologico_naoPossuo"
+                                            onchange="toggleNoInsurance('convenioOdontologico')">
+                                        <span data-i18n="dontHave">Não tenho</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SEÇÃO 2: CONTATO E ENDEREÇO -->
+                    <div class="section">
+                        <h2 class="section-title">
+                            <span class="section-icon">📞</span>
+                            <span data-i18n="section2_title">Contato e Endereço</span>
+                        </h2>
+
+                        <div class="form-grid form-grid-3">
+                            <div class="form-group">
+                                <label>
+                                    <span data-i18n="cellPhone">Celular</span>
+                                    <span class="required">*</span>
+                                </label>
+                                <input type="tel" name="celular" id="celular" required autocomplete="tel">
+                                <span class="error-message" id="celularError">Telefone inválido</span>
+                            </div>
+                            <div class="form-group">
+                                <label data-i18n="homePhone">Telefone Residencial</label>
+                                <input type="tel" name="telefoneResidencial" autocomplete="tel">
+                            </div>
+                            <div class="form-group">
+                                <label data-i18n="email">E-mail</label>
+                                <input type="email" name="email" id="email" autocomplete="email">
+                                <span class="error-message" id="emailError">Email inválido</span>
+                            </div>
+                        </div>
+
+                        <!-- CEP / CÓDIGO POSTAL (SEMPRE VISÍVEL) -->
+                        <div class="form-grid form-grid-2">
+                            <div class="form-group">
+                                <label data-i18n="zipCode">CEP / Código Postal</label>
+                                <input type="text" name="cep" id="cep" maxlength="20" autocomplete="postal-code"
+                                    placeholder="00000-000 ou código do seu país">
+                                <small data-i18n="zipCodeHelp">Para CEP brasileiro, a busca é automática</small>
+                            </div>
+                            <div class="form-group">
+                                <label data-i18n="address">Endereço</label>
+                                <input type="text" name="endereco" id="endereco" autocomplete="street-address">
+                            </div>
+                        </div>
+
+                        <div class="form-grid form-grid-4">
+                            <div class="form-group">
+                                <label data-i18n="number">Número</label>
+                                <input type="text" name="numero" autocomplete="off" placeholder="123">
+                            </div>
+                            <div class="form-group">
+                                <label data-i18n="complement">Complemento</label>
+                                <input type="text" name="complemento" autocomplete="off"
+                                    placeholder="Apto 501, Bloco A, etc">
+                            </div>
+                            <div class="form-group">
+                                <label data-i18n="neighborhood">Bairro</label>
+                                <input type="text" name="bairro" id="bairro" autocomplete="off">
+                            </div>
+                            <div class="form-group">
+                                <label data-i18n="city">Cidade</label>
+                                <input type="text" name="cidade" id="cidade" autocomplete="address-level2">
+                            </div>
+                        </div>
+
+                        <!-- Quem indicou -->
+                        <div class="form-group full-width">
+                            <label data-i18n="whoReferred">Quem te indicou?</label>
+                            <input type="text" name="quemIndicou"
+                                placeholder="Nome da pessoa ou meio que conheceu a clínica">
+                        </div>
+                    </div>
+
+                    <!-- SEÇÃO 3: HISTÓRICO MÉDICO -->
+                    <div class="section">
+                        <h2 class="section-title">
+                            <span class="section-icon">🏥</span>
+                            <span data-i18n="section3_title">Histórico Médico</span>
+                        </h2>
+
+                        <!-- ITEM 1: Queixa Principal (texto livre obrigatório) -->
+                        <div class="form-group">
+                            <label>
+                                <span data-i18n="chiefComplaint">Qual a sua queixa principal?</span>
+                                <span class="required">*</span>
+                            </label>
+                            <textarea name="queixaPrincipal" required></textarea>
+                        </div>
+
+                        <!-- ITEM 2: Última Avaliação Médica (texto livre) -->
+                        <div class="form-group">
+                            <label data-i18n="lastMedicalEval">Quando ocorreu sua última avaliação médica? Qual o
+                                motivo?</label>
+                            <textarea name="ultimaAvaliacaoMedica"></textarea>
+                        </div>
+
+                        <!-- ITEM 3: Última Doença (Campo aberto + Não lembro) -->
+                        <div class="form-group">
+                            <label data-i18n="lastIllness">Quando foi a última vez em que esteve doente?</label>
+                            <textarea name="ultimaDoenca" id="ultimaDoenca"
+                                placeholder="Descreva quando foi e qual doença..."></textarea>
+                            <div style="margin-top: 8px;">
+                                <label class="radio-option" style="display: inline-flex; margin: 0;">
+                                    <input type="checkbox" id="ultimaDoenca_naolembro"
+                                        onchange="toggleDontRemember('ultimaDoenca')">
+                                    <span data-i18n="dontRemember">Não lembro</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- ITEM 4: Hospitalização (Sim/Não/Não lembro) -->
+                        <div class="form-group">
+                            <label data-i18n="hospitalization">Foi hospitalizado nos últimos 05 anos ou teve alguma
+                                doença séria?</label>
+                            <div class="radio-group" style="margin: 12px 0;">
+                                <label class="radio-option">
+                                    <input type="radio" name="hospitalizacao_escolha" value="sim"
+                                        onchange="toggleConditionalField('hospitalizacao', true)">
+                                    <span data-i18n="yes">Sim</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="hospitalizacao_escolha" value="nao"
+                                        onchange="toggleConditionalField('hospitalizacao', false)">
+                                    <span data-i18n="no">Não</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="hospitalizacao_escolha" value="nao_lembro"
+                                        onchange="toggleConditionalField('hospitalizacao', false)">
+                                    <span data-i18n="dontRemember">Não lembro</span>
+                                </label>
+                            </div>
+                            <div class="conditional-field" id="hospitalizacao_field">
+                                <label data-i18n="ifYesExplain">Se sim, explique:</label>
+                                <textarea name="hospitalizacao" id="hospitalizacao"></textarea>
+                            </div>
+                        </div>
+
+                        <!-- ITEM 5: Tratamento Atual (Sim/Não) -->
+                        <div class="form-group">
+                            <label data-i18n="currentTreatment">Está sob algum tratamento médico no momento?</label>
+                            <div class="radio-group" style="margin: 12px 0;">
+                                <label class="radio-option">
+                                    <input type="radio" name="tratamentoAtual_escolha" value="sim"
+                                        onchange="toggleConditionalField('tratamentoAtual', true)">
+                                    <span data-i18n="yes">Sim</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="tratamentoAtual_escolha" value="nao"
+                                        onchange="toggleConditionalField('tratamentoAtual', false)">
+                                    <span data-i18n="no">Não</span>
+                                </label>
+                            </div>
+                            <div class="conditional-field" id="tratamentoAtual_field">
+                                <label data-i18n="ifYesExplain">Se sim, explique:</label>
+                                <textarea name="tratamentoAtual" id="tratamentoAtual"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SEÇÃO 4: CONDIÇÕES DE SAÚDE -->
+                    <div class="section">
+                        <h2 class="section-title">
+                            <span class="section-icon">❤️</span>
+                            <span data-i18n="section4_title">Condições de Saúde Específicas</span>
+                        </h2>
+
+                        <div class="form-group">
+                            <label data-i18n="cardiovascular">Pergunta?</label>
+                            <small data-i18n="cardiovascularDetails">
+                                (detalhes...)
+                            </small>
+                            <div class="radio-group" style="margin: 12px 0;">
+                                <label class="radio-option">
+                                    <input type="radio" name="cardiovascular_escolha" value="sim"
+                                        onchange="toggleConditionalField('cardiovascular', true)">
+                                    <span data-i18n="yes">Sim</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="cardiovascular_escolha" value="nao"
+                                        onchange="toggleConditionalField('cardiovascular', false)">
+                                    <span data-i18n="no">Não</span>
+                                </label>
+                            </div>
+                            <div class="conditional-field" id="cardiovascular_field">
+                                <label data-i18n="ifYesExplain">Se sim, explique:</label>
+                                <small data-i18n="cardiovascularDetails">
+                                    (detalhes...)
+                                </small>
+                                <textarea name="cardiovascular" id="cardiovascular"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label data-i18n="nervous">Pergunta?</label>
+                            <small data-i18n="nervousDetails">
+                                (detalhes...)
+                            </small>
+                            <div class="radio-group" style="margin: 12px 0;">
+                                <label class="radio-option">
+                                    <input type="radio" name="nervoso_escolha" value="sim"
+                                        onchange="toggleConditionalField('nervoso', true)">
+                                    <span data-i18n="yes">Sim</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="nervoso_escolha" value="nao"
+                                        onchange="toggleConditionalField('nervoso', false)">
+                                    <span data-i18n="no">Não</span>
+                                </label>
+                            </div>
+                            <div class="conditional-field" id="nervoso_field">
+                                <label data-i18n="ifYesExplain">Se sim, explique:</label>
+                                <small data-i18n="nervousDetails">
+                                    (detalhes...)
+                                </small>
+                                <textarea name="nervoso" id="nervoso"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label data-i18n="endocrine">Você tem algum problema endócrino?</label>
+                            <small data-i18n="endocrineDetails">
+                                (diabetes melitus tipo I ou II; faz uso de algum medicamento para controlar a dose de
+                                açúcar no sangue; sente sede a maior parte do tempo; sente fome a maior parte do tempo;
+                                costuma urinar mais de 06 vezes ao dia; perdeu peso ultimamente; possui história
+                                familiar de diabetes melitus tipo I ou II; tem algum problema relacionado às glândulas
+                                supra-renais; feocromocitoma; algum problema relacionado à tireóide; faz uso de algum
+                                medicamento para a tireóide; cirurgia na tireóide ou algum outro?)
+                            </small>
+                            <div class="radio-group" style="margin: 12px 0;">
+                                <label class="radio-option">
+                                    <input type="radio" name="endocrino_escolha" value="sim"
+                                        onchange="toggleConditionalField('endocrino', true)">
+                                    <span data-i18n="yes">Sim</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="endocrino_escolha" value="nao"
+                                        onchange="toggleConditionalField('endocrino', false)">
+                                    <span data-i18n="no">Não</span>
+                                </label>
+                            </div>
+                            <div class="conditional-field" id="endocrino_field">
+                                <label data-i18n="ifYesExplain">Se sim, explique:</label>
+                                <textarea name="endocrino" id="endocrino"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label data-i18n="respiratory">Pergunta?</label>
+                            <small data-i18n="respiratoryDetails">
+                                (detalhes...)
+                            </small>
+                            <div class="radio-group" style="margin: 12px 0;">
+                                <label class="radio-option">
+                                    <input type="radio" name="respiratorio_escolha" value="sim"
+                                        onchange="toggleConditionalField('respiratorio', true)">
+                                    <span data-i18n="yes">Sim</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="respiratorio_escolha" value="nao"
+                                        onchange="toggleConditionalField('respiratorio', false)">
+                                    <span data-i18n="no">Não</span>
+                                </label>
+                            </div>
+                            <div class="conditional-field" id="respiratorio_field">
+                                <label data-i18n="ifYesExplain">Se sim, explique:</label>
+                                <small data-i18n="respiratoryDetails">
+                                    (detalhes...)
+                                </small>
+                                <textarea name="respiratorio" id="respiratorio"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label data-i18n="digestive">Pergunta?</label>
+                            <small data-i18n="digestiveDetails">
+                                (detalhes...)
+                            </small>
+                            <div class="radio-group" style="margin: 12px 0;">
+                                <label class="radio-option">
+                                    <input type="radio" name="digestivo_escolha" value="sim"
+                                        onchange="toggleConditionalField('digestivo', true)">
+                                    <span data-i18n="yes">Sim</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="digestivo_escolha" value="nao"
+                                        onchange="toggleConditionalField('digestivo', false)">
+                                    <span data-i18n="no">Não</span>
+                                </label>
+                            </div>
+                            <div class="conditional-field" id="digestivo_field">
+                                <label data-i18n="ifYesExplain">Se sim, explique:</label>
+                                <small data-i18n="digestiveDetails">
+                                    (detalhes...)
+                                </small>
+                                <textarea name="digestivo" id="digestivo"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label data-i18n="renal">Pergunta?</label>
+
+                            <div class="radio-group" style="margin: 12px 0;">
+                                <label class="radio-option">
+                                    <input type="radio" name="renal_escolha" value="sim"
+                                        onchange="toggleConditionalField('renal', true)">
+                                    <span data-i18n="yes">Sim</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="renal_escolha" value="nao"
+                                        onchange="toggleConditionalField('renal', false)">
+                                    <span data-i18n="no">Não</span>
+                                </label>
+                            </div>
+                            <div class="conditional-field" id="renal_field">
+                                <label data-i18n="ifYesExplain">Se sim, explique:</label>
+
+                                <textarea name="renal" id="renal"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label data-i18n="bone">Pergunta?</label>
+                            <small data-i18n="boneDetails">
+                                (detalhes...)
+                            </small>
+                            <div class="radio-group" style="margin: 12px 0;">
+                                <label class="radio-option">
+                                    <input type="radio" name="osseo_escolha" value="sim"
+                                        onchange="toggleConditionalField('osseo', true)">
+                                    <span data-i18n="yes">Sim</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="osseo_escolha" value="nao"
+                                        onchange="toggleConditionalField('osseo', false)">
+                                    <span data-i18n="no">Não</span>
+                                </label>
+                            </div>
+                            <div class="conditional-field" id="osseo_field">
+                                <label data-i18n="ifYesExplain">Se sim, explique:</label>
+                                <small data-i18n="boneDetails">
+                                    (detalhes...)
+                                </small>
+                                <textarea name="osseo" id="osseo"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SEÇÃO 5: MEDICAMENTOS E ALERGIAS -->
+                    <div class="section">
+                        <h2 class="section-title">
+                            <span class="section-icon">💊</span>
+                            <span data-i18n="section5_title">Medicamentos e Alergias</span>
+                        </h2>
+
+                        <div class="form-group">
+                            <label>
+                                <span data-i18n="medications">Pergunta?</span>
+
+                            </label>
+                            <small data-i18n="medicationsList">
+                                (detalhes...)
+                            </small>
+                            <div class="radio-group" style="margin: 12px 0;">
+                                <label class="radio-option">
+                                    <input type="radio" name="medicamentos_escolha" value="sim"
+                                        onchange="toggleConditionalField('medicamentos', true)">
+                                    <span data-i18n="yes">Sim</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="medicamentos_escolha" value="nao"
+                                        onchange="toggleConditionalField('medicamentos', false)">
+                                    <span data-i18n="no">Não</span>
+                                </label>
+                            </div>
+                            <div class="conditional-field" id="medicamentos_field">
+                                <label data-i18n="ifYesExplain">Se sim, explique:</label>
+                                <small data-i18n="medicationsList">
+                                    (detalhes...)
+                                </small>
+                                <textarea name="medicamentos" id="medicamentos"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>
+                                <span data-i18n="allergies">Pergunta?</span>
+                                <span class="required">*</span>
+                            </label>
+                            <small data-i18n="allergiesDetails">
+                                (detalhes...)
+                            </small>
+                            <div class="radio-group" style="margin: 12px 0;">
+                                <label class="radio-option">
+                                    <input type="radio" name="alergias_escolha" value="sim"
+                                        onchange="toggleConditionalField('alergias', true)">
+                                    <span data-i18n="yes">Sim</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="alergias_escolha" value="nao"
+                                        onchange="toggleConditionalField('alergias', false)">
+                                    <span data-i18n="no">Não</span>
+                                </label>
+                            </div>
+                            <div class="conditional-field" id="alergias_field">
+                                <label data-i18n="ifYesExplain">Se sim, explique:</label>
+                                <small data-i18n="allergiesDetails">
+                                    (detalhes...)
+                                </small>
+                                <textarea name="alergias" id="alergias"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SEÇÃO 6: HISTÓRICO ODONTOLÓGICO -->
+                    <div class="section">
+                        <h2 class="section-title">
+                            <span class="section-icon">🦷</span>
+                            <span data-i18n="section6_title">Histórico Odontológico</span>
+                        </h2>
+
+                        <div class="form-group">
+                            <label>
+                                <span data-i18n="otherConditions">Pergunta?</span>
+
+                            </label>
+
+                            <div class="radio-group" style="margin: 12px 0;">
+                                <label class="radio-option">
+                                    <input type="radio" name="outrasCondicoes_escolha" value="sim"
+                                        onchange="toggleConditionalField('outrasCondicoes', true)">
+                                    <span data-i18n="yes">Sim</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="outrasCondicoes_escolha" value="nao"
+                                        onchange="toggleConditionalField('outrasCondicoes', false)">
+                                    <span data-i18n="no">Não</span>
+                                </label>
+                            </div>
+                            <div class="conditional-field" id="outrasCondicoes_field">
+                                <label data-i18n="ifYesExplain">Se sim, explique:</label>
+
+                                <textarea name="outrasCondicoes" id="outrasCondicoes"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label data-i18n="dentalProblems">
+                                Já teve algum problema sério em algum tratamento dentário prévio?
+                            </label>
+                            <div class="radio-group" style="margin: 12px 0;">
+                                <label class="radio-option">
+                                    <input type="radio" name="problemasDentarios_escolha" value="sim"
+                                        onchange="toggleConditionalField('problemasDentarios', true)">
+                                    <span data-i18n="yes">Sim</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="problemasDentarios_escolha" value="nao"
+                                        onchange="toggleConditionalField('problemasDentarios', false)">
+                                    <span data-i18n="no">Não</span>
+                                </label>
+                            </div>
+                            <div class="conditional-field" id="problemasDentarios_field">
+                                <label data-i18n="ifYesExplain">Se sim, explique:</label>
+                                <textarea name="problemasDentarios" id="problemasDentarios"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SEÇÃO 7: QUESTÕES ESPECÍFICAS (MULHERES / OUTROS) -->
+                    <div class="section" id="section7" style="display: none;">
+                        <h2 class="section-title">
+                            <span class="section-icon">💜</span>
+                            <span data-i18n="section7_title">Questões Específicas</span>
+                            <span data-i18n="ifApplicable">(se aplicável)</span>
+                        </h2>
+
+                        <!-- Grávida -->
+                        <div class="form-group">
+                            <label data-i18n="pregnant">Está grávida ou suspeita que esteja?</label>
+                            <div class="radio-group" style="margin: 12px 0;">
+                                <label class="radio-option">
+                                    <input type="radio" name="gravidez_escolha" value="sim"
+                                        onchange="toggleConditionalField('gravidez', true)">
+                                    <span data-i18n="yes">Sim</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="gravidez_escolha" value="nao"
+                                        onchange="toggleConditionalField('gravidez', false)">
+                                    <span data-i18n="no">Não</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="gravidez_escolha" value="nao_aplica"
+                                        onchange="toggleConditionalField('gravidez', false)">
+                                    <span data-i18n="doesNotApply">Não se aplica</span>
+                                </label>
+                            </div>
+                            <div class="conditional-field" id="gravidez_field">
+                                <label data-i18n="ifYesExplain">Se sim, explique:</label>
+                                <textarea name="gravidez" id="gravidez"></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Amamentando -->
+                        <div class="form-group">
+                            <label data-i18n="breastfeeding">Está amamentando?</label>
+                            <div class="radio-group" style="margin: 12px 0;">
+                                <label class="radio-option">
+                                    <input type="radio" name="amamentacao_escolha" value="sim"
+                                        onchange="toggleConditionalField('amamentacao', true)">
+                                    <span data-i18n="yes">Sim</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="amamentacao_escolha" value="nao"
+                                        onchange="toggleConditionalField('amamentacao', false)">
+                                    <span data-i18n="no">Não</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="amamentacao_escolha" value="nao_aplica"
+                                        onchange="toggleConditionalField('amamentacao', false)">
+                                    <span data-i18n="doesNotApply">Não se aplica</span>
+                                </label>
+                            </div>
+                            <div class="conditional-field" id="amamentacao_field">
+                                <label data-i18n="ifYesExplain">Se sim, explique:</label>
+                                <textarea name="amamentacao" id="amamentacao"></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Anticoncepcional -->
+                        <div class="form-group">
+                            <label data-i18n="birthControl">Faz uso de anticoncepcional via oral?</label>
+                            <div class="radio-group" style="margin: 12px 0;">
+                                <label class="radio-option">
+                                    <input type="radio" name="anticoncepcional_escolha" value="sim"
+                                        onchange="toggleConditionalField('anticoncepcional', true)">
+                                    <span data-i18n="yes">Sim</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="anticoncepcional_escolha" value="nao"
+                                        onchange="toggleConditionalField('anticoncepcional', false)">
+                                    <span data-i18n="no">Não</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="anticoncepcional_escolha" value="nao_aplica"
+                                        onchange="toggleConditionalField('anticoncepcional', false)">
+                                    <span data-i18n="doesNotApply">Não se aplica</span>
+                                </label>
+                            </div>
+                            <div class="conditional-field" id="anticoncepcional_field">
+                                <label data-i18n="ifYesExplain">Se sim, explique:</label>
+                                <small>Qual medicamento e dosagem?</small>
+                                <textarea name="anticoncepcional" id="anticoncepcional"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SEÇÃO 8: ASSINATURA -->
+                    <div class="section">
+                        <h2 class="section-title">
+                            <span class="section-icon">✍️</span>
+                            <span data-i18n="section8_title">Termo de Consentimento e Assinatura</span>
+                        </h2>
+
+                        <div class="form-group">
+                            <div class="info-box">
+                                <p data-i18n="consentText1" style="margin-bottom: 12px;">
+                                    Eu certifico que li e respondi o questionário sobre a minha história
+                                    médica-odontológica. Minhas perguntas sobre o questionário, se existiram, foram
+                                    respondidas satisfatoriamente.
+                                </p>
+                                <p data-i18n="consentText2" style="margin-bottom: 12px;">
+                                    Autorizo a digitalização deste para arquivamento em prontuário digital e afirmo ter
+                                    assinado apenas após a confirmação de todas as informações ao final da minha
+                                    consulta inicial.
+                                </p>
+                                <p data-i18n="consentText3">
+                                    Comprometo-me a informar ao meu cirurgião-dentista assistente a mudança de qualquer
+                                    informação aqui prestada para que atualize o meu prontuário se necessário.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="form-grid form-grid-2" style="margin-bottom: 24px;">
+                            <div class="form-group">
+                                <label>
+                                    <span data-i18n="location">Local</span>
+                                    <span class="required">*</span>
+                                </label>
+                                <input type="text" name="local" value="Salvador, Bahia" required>
+                            </div>
+                            <div class="form-group">
+                                <label>
+                                    <span data-i18n="date">Data</span>
+                                    <span class="required">*</span>
+                                </label>
+                                <input type="date" name="data" id="dataAssinatura" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="signature-pad-container">
+                                <div class="signature-canvas-wrapper">
+                                    <canvas id="signatureCanvas" class="signature-canvas"></canvas>
+                                    <div class="signature-placeholder" id="signaturePlaceholder">
+                                        <span data-i18n="signaturePlaceholder">Use o dedo ou caneta para
+                                            assinar</span><br>
+                                        <small data-i18n="tapToStart">(Toque ou clique para começar)</small>
+                                    </div>
+                                </div>
+
+                                <div style="margin-top: 15px; text-align: center;">
+                                    <button type="button" class="btn btn-secondary" onclick="limparAssinatura()">
+                                        <span>🗑️</span>
+                                        <span>Limpar Assinatura</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <input type="hidden" name="assinaturaDigital" id="assinaturaDigitalData" required>
+                            <input type="hidden" name="assinaturaHash" id="assinaturaHash">
+                            <input type="hidden" name="assinaturaIP" id="assinaturaIP">
+                            <input type="hidden" name="assinaturaTimestamp" id="assinaturaTimestamp">
+                        </div>
+                    </div>
+
+                    <!-- BOTÕES -->
+                    <div class="button-group">
+                        <button type="button" class="btn btn-secondary" onclick="limparFormulario()">
+                            <span>🔄</span>
+                            <span data-i18n="clear">Limpar</span>
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="baixarPDF()" id="btnPDF">
+                            <span>📄</span>
+                            <span>Download PDF</span>
+                        </button>
+                        <button type="submit" class="btn btn-primary" id="btnSubmit">
+                            <span>✅</span>
+                            <span data-i18n="submit">Finalizar e Processar</span>
+                        </button>
+                    </div>
+
+                </form>
+
+                <!-- MENSAGEM DE SUCESSO -->
+                <div class="success-message" id="successMessage">
+                    <h3 data-i18n="success">✅ Prontuário Processado com Sucesso!</h3>
+                    <p data-i18n="successText">As informações foram registradas corretamente.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // CONFIGURAÇÕES GLOBAIS
+        // ==========================================
+
+        const LOGO_BASE64 = 'data:image/webp;base64,UklGRliEAABXRUJQVlA4WAoAAAAgAAAAzwcAZQQASUNDUMgBAAAAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAAAAbWNocm0nAC0xNzE1';
+
+        const languageFlags = {
+            pt: '🇧🇷', en: '🇺🇸', es: '🇪🇸', fr: '🇫🇷', it: '🇮🇹',
+            de: '🇩🇪', zh: '🇨🇳', ja: '🇯🇵', ru: '🇷🇺', ar: '🇸🇦'
+        };
+
+        let signaturePad;
+        let autosaveInterval;
+        let formData = {};
+
+        // ==========================================
+        // SISTEMA MULTILÍNGUE
+        // ==========================================
+
+        function selectLanguage(lang) {
+            currentLanguage = lang;
+            updateAllTranslations();
+
+            document.getElementById('currentFlag').textContent = languageFlags[lang];
+            document.getElementById('currentLang').textContent = translations[lang].languageName;
+
+            document.getElementById('languageSelector').classList.add('hidden');
+            document.getElementById('mainApp').classList.add('active');
+
+            setTimeout(() => {
+                initSignaturePad();
+                startAutosave();
+                loadDraft();
+            }, 100);
+
+            localStorage.setItem('preferred_language', lang);
+        }
+
+        function changeLanguageScreen() {
+            if (confirm('Trocar idioma? O progresso atual será salvo.')) {
+                saveDraft();
+                document.getElementById('languageSelector').classList.remove('hidden');
+                document.getElementById('mainApp').classList.remove('active');
+            }
+        }
+
+        function updateAllTranslations() {
+            console.log('🌍 Atualizando traduções para:', currentLanguage);
+
+            document.querySelectorAll('[data-i18n]').forEach(element => {
+                const key = element.getAttribute('data-i18n');
+                const translation = t(key);
+
+                if (!translation) return;
+
+                if (element.tagName === 'INPUT' && (element.type === 'text' || element.type === 'email' || element.type === 'tel')) {
+                    element.placeholder = translation;
+                } else if (element.tagName === 'TEXTAREA') {
+                    element.placeholder = translation;
+                } else if (element.tagName === 'OPTION') {
+                    element.textContent = translation;
+                } else if (element.tagName === 'SMALL' || element.tagName === 'P') {
+                    element.textContent = translation;
+                } else if (element.tagName === 'LABEL') {
+                    const spans = element.querySelectorAll('span:not(.required)');
+                    if (spans.length > 0) {
+                        spans[0].textContent = translation;
+                    } else {
+                        const required = element.querySelector('.required');
+                        if (required) {
+                            element.innerHTML = '';
+                            const span = document.createElement('span');
+                            span.textContent = translation;
+                            element.appendChild(span);
+                            element.appendChild(required);
+                        } else {
+                            element.textContent = translation;
+                        }
+                    }
+                } else {
+                    const icon = element.querySelector('.section-icon');
+                    const textSpan = element.querySelector('span:not(.section-icon):not(.required)');
+                    if (textSpan) {
+                        textSpan.textContent = translation;
+                    } else if (!icon) {
+                        element.textContent = translation;
+                    }
+                }
+            });
+
+            if (currentLanguage === 'ar') {
+                document.documentElement.setAttribute('dir', 'rtl');
+            } else {
+                document.documentElement.setAttribute('dir', 'ltr');
+            }
+
+            console.log('✅ Traduções atualizadas!');
+        }
+
+        // ==========================================
+        // CONTROLE DE CAMPOS CONDICIONAIS (RESIDÊNCIA)
+        // ==========================================
+
+        let isResident = null;
+
+        function toggleResidencyFields(resident) {
+            isResident = resident;
+
+            // Campos condicionais
+            const cpfField = document.getElementById('cpfField');
+            const passportField = document.getElementById('passportField');
+            const countryField = document.getElementById('countryField');
+
+            // Inputs
+            const cpfInput = document.getElementById('cpf');
+            const passportInput = document.getElementById('passaporte');
+            const countryInput = document.getElementById('pais');
+            const cepInput = document.getElementById('cep');
+
+            // Radio buttons visual
+            document.getElementById('residentYes').classList.toggle('selected', resident);
+            document.getElementById('residentNo').classList.toggle('selected', !resident);
+
+            if (resident) {
+                // RESIDENTE: mostrar CPF, ativar busca automática de CEP
+                cpfField.classList.add('show');
+                cpfInput.required = true;
+
+                // Esconder campos de não-residente
+                passportField.classList.remove('show');
+                countryField.classList.remove('show');
+                passportInput.required = false;
+                countryInput.required = false;
+
+                // Ativar validações para residentes
+                cpfInput.addEventListener('blur', validateCPFHandler);
+
+                // Ativar busca automática CEP
+                if (cepInput && !cepInput.hasAttribute('data-listener-added')) {
+                    cepInput.addEventListener('input', function () {
+                        // Formatar CEP: 00000-000
+                        let value = this.value.replace(/\D/g, '');
+                        if (value.length > 8) value = value.slice(0, 8);
+                        if (value.length > 5) {
+                            this.value = value.slice(0, 5) + '-' + value.slice(5);
+                        } else {
+                            this.value = value;
+                        }
+                        // Buscar CEP se tiver 8 dígitos
+                        if (value.length === 8) {
+                            buscarCEP(value);
+                        }
+                    });
+                    cepInput.setAttribute('data-listener-added', 'true');
+                }
+
+            } else {
+                // NÃO-RESIDENTE: mostrar Passaporte, CEP livre (sem busca)
+                passportField.classList.add('show');
+                countryField.classList.add('show');
+                passportInput.required = true;
+                countryInput.required = true;
+
+                // Esconder campos de residente
+                cpfField.classList.remove('show');
+                cpfInput.required = false;
+
+                // Remover validações de residente
+                cpfInput.removeEventListener('blur', validateCPFHandler);
+
+                // Limpar erros se houver
+                const cpfError = document.getElementById('cpfError');
+                if (cpfError) cpfError.classList.remove('show');
+                cpfInput.classList.remove('error');
+            }
+
+            console.log('🔄 Campos de residência atualizados:', resident ? 'RESIDENTE' : 'NÃO-RESIDENTE');
+        }
+
+        // ==========================================
+        // CONTROLE DE CAMPOS CONDICIONAIS (SIM/NÃO)
+        // ==========================================
+
+        function toggleConditionalField(fieldName, show) {
+            const field = document.getElementById(fieldName + '_field');
+            const textarea = document.getElementById(fieldName);
+
+            if (field && textarea) {
+                if (show) {
+                    field.classList.add('show');
+                    textarea.required = true;
+                } else {
+                    field.classList.remove('show');
+                    textarea.required = false;
+                    textarea.value = ''; // Limpar valor se esconder
+                }
+            }
+        }
+
+        // Função para checkbox "Não lembro"
+        function toggleDontRemember(fieldName) {
+            const checkbox = document.getElementById(fieldName + '_naolembro');
+            const textarea = document.getElementById(fieldName);
+
+            if (checkbox && textarea) {
+                if (checkbox.checked) {
+                    textarea.value = 'Não lembro';
+                    textarea.disabled = true;
+                    textarea.style.backgroundColor = '#f5f5f5';
+                } else {
+                    if (textarea.value === 'Não lembro') {
+                        textarea.value = '';
+                    }
+                    textarea.disabled = false;
+                    textarea.style.backgroundColor = '';
+                }
+            }
+        }
+
+        // Função para checkbox "Não tenho" (convênios)
+        function toggleNoInsurance(fieldName) {
+            const checkbox = document.getElementById(fieldName + '_naoPossuo');
+            const input = document.getElementById(fieldName);
+
+            if (checkbox && input) {
+                if (checkbox.checked) {
+                    input.value = 'Não possui';
+                    input.disabled = true;
+                    input.style.backgroundColor = '#f5f5f5';
+                } else {
+                    if (input.value === 'Não possui') {
+                        input.value = '';
+                    }
+                    input.disabled = false;
+                    input.style.backgroundColor = '';
+                }
+            }
+        }
+
+        // ==========================================
+        // CONTROLE SEÇÃO 7 (MULHERES / OUTROS)
+        // ==========================================
+
+        function toggleSection7() {
+            const sexo = document.getElementById('sexo').value;
+            const section7 = document.getElementById('section7');
+
+            if (section7) {
+                if (sexo === 'F' || sexo === 'outro') {
+                    section7.style.display = 'block';
+                } else {
+                    section7.style.display = 'none';
+                    // Limpar campos da seção 7
+                    document.querySelectorAll('#section7 input[type="radio"]').forEach(input => {
+                        input.checked = false;
+                    });
+                    document.querySelectorAll('#section7 textarea').forEach(textarea => {
+                        textarea.value = '';
+                        textarea.required = false;
+                    });
+                }
+            }
+        }
+
+        // Handlers separados para poder remover listeners
+        const validateCPFHandler = function () {
+            if (this.value && !validarCPF(this.value)) {
+                this.classList.add('error');
+                document.getElementById('cpfError').classList.add('show');
+            } else {
+                this.classList.remove('error');
+                document.getElementById('cpfError').classList.remove('show');
+            }
+        };
+
+        const validateCEPHandler = function () {
+            buscarCEP(this.value);
+        };
+
+        // ==========================================
+        // AUTO-SAVE (SALVAMENTO AUTOMÁTICO)
+        // ==========================================
+
+        function startAutosave() {
+            autosaveInterval = setInterval(() => {
+                saveDraft();
+            }, 30000); // 30 segundos
+        }
+
+        function saveDraft() {
+            const form = document.getElementById('anamneseForm');
+            const data = new FormData(form);
+            const draftData = {};
+
+            for (let [key, value] of data.entries()) {
+                draftData[key] = value;
+            }
+
+            draftData.language = currentLanguage;
+            draftData.savedAt = new Date().toISOString();
+
+            localStorage.setItem('prontuario_draft', JSON.stringify(draftData));
+
+            showAutosaveIndicator('saved');
+        }
+
+        function loadDraft() {
+            const draft = localStorage.getItem('prontuario_draft');
+            if (!draft) return;
+
+            const data = JSON.parse(draft);
+
+            if (data.language !== currentLanguage) return;
+
+            const savedDate = new Date(data.savedAt);
+            const now = new Date();
+            const hoursDiff = (now - savedDate) / (1000 * 60 * 60);
+
+            if (hoursDiff > 24) {
+                localStorage.removeItem('prontuario_draft');
+                return;
+            }
+
+            if (confirm('Encontramos um rascunho salvo. Deseja continuar de onde parou?')) {
+                Object.keys(data).forEach(key => {
+                    const input = document.querySelector(`[name="${key}"]`);
+                    if (input && key !== 'assinaturaDigital') {
+                        input.value = data[key];
+                    }
+                });
+            } else {
+                localStorage.removeItem('prontuario_draft');
+            }
+        }
+
+        function showAutosaveIndicator(status) {
+            const indicator = document.getElementById('autosaveIndicator');
+            const text = indicator.querySelector('.text');
+
+            indicator.classList.remove('saving', 'saved');
+            indicator.classList.add(status, 'show');
+
+            if (status === 'saving') {
+                text.textContent = 'Salvando...';
+            } else {
+                text.textContent = 'Salvo ✓';
+            }
+
+            setTimeout(() => {
+                indicator.classList.remove('show');
+            }, 2000);
+        }
+
+        // ==========================================
+        // VALIDAÇÕES INTELIGENTES
+        // ==========================================
+
+        function validarCPF(cpf) {
+            cpf = cpf.replace(/[^\d]/g, '');
+
+            if (cpf.length !== 11) return false;
+            if (/^(\d)\1+$/.test(cpf)) return false;
+
+            let soma = 0;
+            for (let i = 0; i < 9; i++) {
+                soma += parseInt(cpf.charAt(i)) * (10 - i);
+            }
+            let resto = 11 - (soma % 11);
+            let digito1 = resto >= 10 ? 0 : resto;
+
+            soma = 0;
+            for (let i = 0; i < 10; i++) {
+                soma += parseInt(cpf.charAt(i)) * (11 - i);
+            }
+            resto = 11 - (soma % 11);
+            let digito2 = resto >= 10 ? 0 : resto;
+
+            return parseInt(cpf.charAt(9)) === digito1 && parseInt(cpf.charAt(10)) === digito2;
+        }
+
+        function validarEmail(email) {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(email);
+        }
+
+        function validarTelefone(tel) {
+            const digitos = tel.replace(/[^\d]/g, '');
+            return digitos.length >= 10 && digitos.length <= 11;
+        }
+
+        function validarDataNascimento(data) {
+            const nascimento = new Date(data);
+            const hoje = new Date();
+            const idade = hoje.getFullYear() - nascimento.getFullYear();
+            return idade >= 0 && idade <= 120;
+        }
+
+        // ==========================================
+        // CEP AUTOMÁTICO (Via API ViaCEP)
+        // ==========================================
+
+        async function buscarCEP(cep) {
+            cep = cep.replace(/[^\d]/g, '');
+
+            if (cep.length !== 8) return;
+
+            try {
+                const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+                const data = await response.json();
+
+                if (data.erro) {
+                    document.getElementById('cepError').classList.add('show');
+                    return;
+                }
+
+                document.getElementById('endereco').value = data.logradouro || '';
+                document.getElementById('bairro').value = data.bairro || '';
+                document.getElementById('cidade').value = data.localidade || '';
+
+                document.getElementById('cepError').classList.remove('show');
+
+            } catch (error) {
+                console.error('Erro ao buscar CEP:', error);
+            }
+        }
+
+        // ==========================================
+        // EVENT LISTENERS DE VALIDAÇÃO
+        // ==========================================
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Data atual
+            const today = new Date().toISOString().split('T')[0];
+            const dataField = document.getElementById('dataAssinatura');
+            if (dataField) dataField.value = today;
+
+            // Listener para campo Sexo (controla Seção 7)
+            const sexoSelect = document.getElementById('sexo');
+            if (sexoSelect) {
+                sexoSelect.addEventListener('change', toggleSection7);
+                // Executar ao carregar se já tiver valor
+                if (sexoSelect.value) toggleSection7();
+            }
+
+            // CPF - Apenas formatação automática
+            const cpfInput = document.getElementById('cpf');
+            if (cpfInput) {
+                // Formatação automática (sempre ativa)
+                cpfInput.addEventListener('input', function () {
+                    let value = this.value.replace(/[^\d]/g, '');
+                    if (value.length > 11) value = value.slice(0, 11);
+                    this.value = value.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+                });
+                // Validação será adicionada apenas quando selecionar "residente"
+            }
+
+            // Email
+            const emailInput = document.getElementById('email');
+            if (emailInput) {
+                emailInput.addEventListener('blur', function () {
+                    if (this.value && !validarEmail(this.value)) {
+                        this.classList.add('error');
+                        document.getElementById('emailError').classList.add('show');
+                    } else {
+                        this.classList.remove('error');
+                        document.getElementById('emailError').classList.remove('show');
+                    }
+                });
+            }
+
+            // Telefone
+            const celularInput = document.getElementById('celular');
+            if (celularInput) {
+                celularInput.addEventListener('blur', function () {
+                    if (this.value && !validarTelefone(this.value)) {
+                        this.classList.add('error');
+                        document.getElementById('celularError').classList.add('show');
+                    } else {
+                        this.classList.remove('error');
+                        document.getElementById('celularError').classList.remove('show');
+                    }
+                });
+
+                celularInput.addEventListener('input', function () {
+                    let value = this.value.replace(/[^\d]/g, '');
+                    if (value.length > 11) value = value.slice(0, 11);
+                    if (value.length === 11) {
+                        this.value = value.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+                    } else if (value.length === 10) {
+                        this.value = value.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
+                    } else {
+                        this.value = value;
+                    }
+                });
+            }
+
+            // CEP - Apenas formatação automática
+            const cepInput = document.getElementById('cep');
+            if (cepInput) {
+                // Formatação automática (sempre ativa)
+                cepInput.addEventListener('input', function () {
+                    let value = this.value.replace(/[^\d]/g, '');
+                    if (value.length > 8) value = value.slice(0, 8);
+                    this.value = value.replace(/(\d{5})(\d{3})/, '$1-$2');
+                });
+                // Busca automática será adicionada apenas quando selecionar "residente"
+            }
+
+            // Data de nascimento
+            const dataNascInput = document.getElementById('dataNascimento');
+            if (dataNascInput) {
+                dataNascInput.addEventListener('blur', function () {
+                    if (this.value && !validarDataNascimento(this.value)) {
+                        this.classList.add('error');
+                        alert('Data de nascimento inválida');
+                    } else {
+                        this.classList.remove('error');
+                    }
+                });
+            }
+        });
+
+        // ==========================================
+        // ASSINATURA DIGITAL
+        // ==========================================
+
+        function initSignaturePad() {
+            const canvas = document.getElementById('signatureCanvas');
+            if (!canvas) return;
+
+            const wrapper = canvas.parentElement;
+
+            function resizeCanvas() {
+                const ratio = Math.max(window.devicePixelRatio || 1, 1);
+                canvas.width = wrapper.offsetWidth * ratio;
+                canvas.height = 220 * ratio;
+                canvas.getContext('2d').scale(ratio, ratio);
+                canvas.style.width = wrapper.offsetWidth + 'px';
+                canvas.style.height = '220px';
+
+                if (signaturePad) signaturePad.clear();
+            }
+
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+
+            signaturePad = new SignaturePad(canvas, {
+                backgroundColor: 'rgb(250, 250, 248)',
+                penColor: '#0a4d4d',
+                minWidth: 1,
+                maxWidth: 3
+            });
+
+            signaturePad.addEventListener('beginStroke', () => {
+                document.getElementById('signaturePlaceholder').classList.add('hidden');
+            });
+
+            signaturePad.addEventListener('endStroke', () => {
+                if (!signaturePad.isEmpty()) {
+                    const signatureData = signaturePad.toDataURL('image/png');
+                    document.getElementById('assinaturaDigitalData').value = signatureData;
+
+                    // Gerar hash SHA-256
+                    crypto.subtle.digest('SHA-256', new TextEncoder().encode(signatureData))
+                        .then(hash => {
+                            const hashArray = Array.from(new Uint8Array(hash));
+                            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+                            document.getElementById('assinaturaHash').value = hashHex;
+                        });
+
+                    // Timestamp
+                    document.getElementById('assinaturaTimestamp').value = new Date().toISOString();
+
+                    // IP (será preenchido pelo servidor em produção)
+                    document.getElementById('assinaturaIP').value = 'client-side';
+                }
+            });
+        }
+
+        // ==========================================
+        // GERAÇÃO DE PDF
+        // ==========================================
+
+        async function baixarPDF() {
+            if (!signaturePad || signaturePad.isEmpty()) {
+                alert('Por favor, assine o formulário antes de gerar o PDF.');
+                return;
+            }
+
+            const form = document.getElementById('anamneseForm');
+            const data = new FormData(form);
+
+            // Aqui você implementaria a geração real do PDF
+            // Por enquanto, vamos simular
+            alert('PDF será gerado em breve! Funcionalidade em desenvolvimento.');
+        }
+
+        // ==========================================
+        // FUNÇÃO GERAR TEXTO DO EMAIL (igual ao PDF)
+        // ==========================================
+
+        function gerarTextoEmailSimples(dados, nomeArquivo) {
+            const dataHora = new Date().toLocaleString('pt-BR', { dateStyle: 'full', timeStyle: 'short' });
+
+            let t = '';
+            t += '═════════════════════════════════════════════════════════════\n';
+            t += 'UAO - UNIDADE DE ATENÇÃO OROFACIAL\n';
+            t += 'Dr. Pedro Pinto Berenguer - CRO-BA 8322\n';
+            t += 'Especialista em Cirurgia e Traumatologia Bucomaxilofacial\n';
+            t += 'Prontuário Digital de Anamnese\n';
+            t += '═════════════════════════════════════════════════════════════\n\n';
+            t += 'Data/Hora de Preenchimento: ' + dataHora + '\n\n';
+
+            // SEÇÃO 1: DADOS PESSOAIS
+            t += '1. DADOS PESSOAIS\n';
+            t += '─────────────────────────────────────────────────────────────\n';
+            t += 'Nome Completo: ' + (dados.nome || '(não informado)') + '\n';
+            t += 'Data de Nascimento: ' + (dados.dataNascimento || '(não informado)') + '\n';
+            t += 'Sexo: ' + (dados.sexo || '(não informado)') + '\n';
+            t += 'Estado Civil: ' + (dados.estadoCivil || '(não informado)') + '\n';
+            t += 'Peso (kg): ' + (dados.peso || '(não informado)') + '\n';
+            t += 'Altura (cm): ' + (dados.altura || '(não informado)') + '\n';
+            t += 'Naturalidade: ' + (dados.naturalidade || '(não informado)') + '\n';
+            t += 'Profissão: ' + (dados.profissao || '(não informado)') + '\n';
+            t += 'Religião: ' + (dados.religiao || '(não informado)') + '\n';
+            t += 'Cor da Pele: ' + (dados.corPele || '(não informado)') + '\n';
+            t += 'Residente no Brasil: ' + (dados.residenteBrasil === 'sim' ? 'Sim' : 'Não') + '\n';
+            if (dados.cpf) t += 'CPF: ' + dados.cpf + '\n';
+            if (dados.passaporte) t += 'Passaporte: ' + dados.passaporte + '\n';
+            if (dados.pais) t += 'País de Origem: ' + dados.pais + '\n';
+            t += 'Convênio Médico/Hospitalar: ' + (dados.convenioMedico || 'Não possui') + '\n';
+            t += 'Convênio Odontológico: ' + (dados.convenioOdontologico || 'Não possui') + '\n\n';
+
+            // SEÇÃO 2: CONTATO E ENDEREÇO
+            t += '2. CONTATO E ENDEREÇO\n';
+            t += '─────────────────────────────────────────────────────────────\n';
+            t += 'Celular: ' + (dados.celular || '(não informado)') + '\n';
+            t += 'Telefone Residencial: ' + (dados.telefoneResidencial || '(não informado)') + '\n';
+            t += 'E-mail: ' + (dados.email || '(não informado)') + '\n';
+            t += 'CEP: ' + (dados.cep || '(não informado)') + '\n';
+            t += 'Endereço: ' + (dados.endereco || '(não informado)') + '\n';
+            t += 'Número: ' + (dados.numero || '(não informado)') + '\n';
+            t += 'Complemento: ' + (dados.complemento || '(não informado)') + '\n';
+            t += 'Bairro: ' + (dados.bairro || '(não informado)') + '\n';
+            t += 'Cidade: ' + (dados.cidade || '(não informado)') + '\n';
+            t += 'Quem indicou: ' + (dados.quemIndicou || '(não informado)') + '\n\n';
+
+            // SEÇÃO 3: HISTÓRICO MÉDICO
+            t += '3. HISTÓRICO MÉDICO\n';
+            t += '─────────────────────────────────────────────────────────────\n';
+            t += 'Queixa Principal: ' + (dados.queixaPrincipal || '(não informado)') + '\n';
+            t += 'Última Avaliação Médica: ' + (dados.ultimaAvaliacaoMedica || '(não informado)') + '\n';
+            t += 'Última vez que esteve doente: ' + (dados.ultimaDoenca || 'Não lembra') + '\n';
+            t += 'Hospitalização nos últimos 5 anos: ' + (dados.hospitalizacao || 'Não lembra') + '\n';
+
+            if (dados.tratamentoAtual_escolha === 'sim' && dados.tratamentoAtual) {
+                t += 'Tratamento médico atual: ' + dados.tratamentoAtual + '\n';
+            } else {
+                t += 'Tratamento médico atual: Não\n';
+            }
+            t += '\n';
+
+            // SEÇÃO 4: CONDIÇÕES DE SAÚDE ESPECÍFICAS
+            t += '4. CONDIÇÕES DE SAÚDE ESPECÍFICAS\n';
+            t += '─────────────────────────────────────────────────────────────\n';
+
+            if (dados.cardiovascular_escolha === 'sim' && dados.cardiovascular) {
+                t += 'Cardiovascular: ' + dados.cardiovascular + '\n';
+            } else {
+                t += 'Cardiovascular: Nega problemas\n';
+            }
+
+            if (dados.nervoso_escolha === 'sim' && dados.nervoso) {
+                t += 'Sistema Nervoso: ' + dados.nervoso + '\n';
+            } else {
+                t += 'Sistema Nervoso: Nega problemas\n';
+            }
+
+            if (dados.endocrino_escolha === 'sim' && dados.endocrino) {
+                t += 'Endócrino: ' + dados.endocrino + '\n';
+            } else {
+                t += 'Endócrino: Nega problemas\n';
+            }
+
+            if (dados.respiratorio_escolha === 'sim' && dados.respiratorio) {
+                t += 'Respiratório: ' + dados.respiratorio + '\n';
+            } else {
+                t += 'Respiratório: Nega problemas\n';
+            }
+
+            if (dados.digestivo_escolha === 'sim' && dados.digestivo) {
+                t += 'Digestório: ' + dados.digestivo + '\n';
+            } else {
+                t += 'Digestório: Nega problemas\n';
+            }
+
+            if (dados.renal_escolha === 'sim' && dados.renal) {
+                t += 'Renal/Urinário: ' + dados.renal + '\n';
+            } else {
+                t += 'Renal/Urinário: Nega problemas\n';
+            }
+
+            if (dados.osseo_escolha === 'sim' && dados.osseo) {
+                t += 'Ósseo: ' + dados.osseo + '\n';
+            } else {
+                t += 'Ósseo: Nega problemas\n';
+            }
+            t += '\n';
+
+            // SEÇÃO 5: MEDICAMENTOS E ALERGIAS
+            t += '5. MEDICAMENTOS E ALERGIAS\n';
+            t += '─────────────────────────────────────────────────────────────\n';
+
+            if (dados.medicamentos_escolha === 'sim' && dados.medicamentos) {
+                t += 'Medicamentos em uso: ' + dados.medicamentos + '\n';
+            } else {
+                t += 'Medicamentos em uso: Não utiliza medicamentos\n';
+            }
+
+            if (dados.alergias_escolha === 'sim' && dados.alergias) {
+                t += 'Alergias: ' + dados.alergias + '\n';
+            } else {
+                t += 'Alergias: Não possui alergias\n';
+            }
+            t += '\n';
+
+            // SEÇÃO 6: HISTÓRICO ODONTOLÓGICO
+            t += '6. HISTÓRICO ODONTOLÓGICO\n';
+            t += '─────────────────────────────────────────────────────────────\n';
+
+            if (dados.outrasCondicoes_escolha === 'sim' && dados.outrasCondicoes) {
+                t += 'Outras condições: ' + dados.outrasCondicoes + '\n';
+            } else {
+                t += 'Outras condições: Nega outras condições de saúde\n';
+            }
+
+            if (dados.problemasDentarios_escolha === 'sim' && dados.problemasDentarios) {
+                t += 'Problemas em tratamentos anteriores: ' + dados.problemasDentarios + '\n';
+            } else {
+                t += 'Problemas em tratamentos anteriores: Nega problemas\n';
+            }
+            t += '\n';
+
+            // SEÇÃO 7: QUESTÕES ESPECÍFICAS (se aplicável)
+            if (dados.sexo === 'F' || dados.sexo === 'outro') {
+                t += '7. QUESTÕES ESPECÍFICAS\n';
+                t += '─────────────────────────────────────────────────────────────\n';
+                t += 'Gravidez: ' + (dados.gravidez || '(não informado)') + '\n';
+                t += 'Amamentação: ' + (dados.amamentacao || '(não informado)') + '\n';
+                t += 'Anticoncepcional: ' + (dados.anticoncepcional || '(não informado)') + '\n\n';
+            }
+
+            // SEÇÃO 8: ASSINATURA
+            t += '8. TERMO DE CONSENTIMENTO E ASSINATURA\n';
+            t += '─────────────────────────────────────────────────────────────\n';
+            if (dados.assinaturaDigital) {
+                t += '✓ ASSINADO DIGITALMENTE\n';
+                t += 'Nome: ' + dados.nome + '\n';
+                const dataAssinatura = dados.dataAssinatura || new Date().toLocaleDateString('pt-BR');
+                t += 'Data: ' + dataAssinatura + '\n';
+            }
+            t += '\n';
+
+            // RODAPÉ
+            t += '─────────────────────────────────────────────────────────────\n';
+            t += 'Documento gerado automaticamente pelo Sistema UAO\n';
+            t += 'Idioma do preenchimento: ' + (dados.idioma || 'pt') + '\n';
+            t += 'Nome do PDF: ' + nomeArquivo + '\n\n';
+
+            t += '⚠️ IMPORTANTE:\n';
+            t += 'O PDF foi baixado automaticamente no computador do paciente.\n';
+            t += 'Peça ao paciente para enviar o arquivo por:\n';
+            t += '📧 Email: uaodocumentos@gmail.com\n';
+            t += '📱 WhatsApp: +55 71 99372-0092\n';
+            t += '═════════════════════════════════════════════════════════════\n';
+
+            return t;
+        }
+
+        async function blobToBase64(blob) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    const base64String = reader.result.split(',')[1];
+                    resolve(base64String);
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
+            });
+        }
+
+        // ==========================================
+        // SUBMISSÃO DO FORMULÁRIO
+        // ==========================================
+
+        document.getElementById('anamneseForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            if (!signaturePad || signaturePad.isEmpty()) {
+                alert(t('signatureError') || 'Por favor, assine o formulário.');
+                document.getElementById('signatureCanvas').scrollIntoView({ behavior: 'smooth' });
+                return;
+            }
+
+            // Mostrar loading
+            const btnSubmit = document.getElementById('btnSubmit');
+            const btnText = btnSubmit.innerHTML;
+            btnSubmit.disabled = true;
+            btnSubmit.innerHTML = '<span>⏳</span><span>Processando...</span>';
+
+            try {
+                const formData = new FormData(this);
+                const dados = {};
+
+                for (let [key, value] of formData.entries()) {
+                    dados[key] = value;
+                }
+
+                dados.idioma = currentLanguage;
+                dados.timestamp = new Date().toISOString();
+                dados.userAgent = navigator.userAgent;
+
+                console.log('📋 Dados coletados:', dados);
+
+                // Gerar PDF
+                console.log('📄 Gerando PDF...');
+                const pdfBlob = await gerarPDFProntuario(dados);
+
+                // Nome do arquivo
+                const nomePaciente = dados.nome || 'Paciente';
+                const dataAtual = new Date().toISOString().split('T')[0];
+                const nomeArquivo = `${nomePaciente.replace(/\s+/g, '_')}_${dataAtual}.pdf`;
+
+                console.log('📁 Nome do arquivo:', nomeArquivo);
+
+                // Baixar PDF localmente
+                const url = URL.createObjectURL(pdfBlob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = nomeArquivo;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                console.log('✅ PDF baixado!');
+
+                // Enviar notificação por email via Netlify Function (Resend)
+                console.log('📧 Iniciando envio de email via Resend...');
+                try {
+                    const pdfBase64 = await blobToBase64(pdfBlob);
+
+                    const response = await fetch('/.netlify/functions/send-email', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            dados: dados,
+                            pdfBase64: pdfBase64,
+                            nomeArquivo: nomeArquivo
+                        })
+                    });
+
+                    const result = await response.json();
+                    console.log('📧 Resposta da função:', result);
+
+                    if (result.success) {
+                        console.log('✅ Email enviado via Resend com sucesso!');
+                    } else {
+                        console.error('❌ Falha no envio via Resend:', result.error);
+                        alert('Aviso: O email automático pode não ter sido enviado. Por favor, envie o PDF manualmente para uaodocumentos@gmail.com');
+                    }
+                } catch (emailError) {
+                    console.error('❌ Erro ao enviar email:', emailError);
+                    alert('Aviso: O email automático não foi enviado. Por favor, envie o PDF manualmente para uaodocumentos@gmail.com');
+                }
+
+                // Limpar draft
+                localStorage.removeItem('prontuario_draft');
+
+                // Mostrar sucesso
+                this.style.display = 'none';
+                document.getElementById('successMessage').classList.add('active');
+
+                // Scroll para mensagem
+                document.getElementById('successMessage').scrollIntoView({ behavior: 'smooth' });
+
+            } catch (error) {
+                console.error('❌ Erro ao processar:', error);
+                alert('Erro ao processar prontuário. Tente novamente ou contate o suporte.');
+                btnSubmit.disabled = false;
+                btnSubmit.innerHTML = btnText;
+            }
+        });
+
+        // ==========================================
+        // GERAÇÃO DE PDF
+        // ==========================================
+
+        async function gerarPDFProntuario(dados) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            let y = 20;
+            const pageHeight = doc.internal.pageSize.height;
+            const margin = 20;
+            const maxWidth = 170;
+
+            // Função auxiliar para adicionar texto com quebra de linha e página
+            function addText(text, fontSize = 10, isBold = false) {
+                if (y > pageHeight - 30) {
+                    doc.addPage();
+                    y = 20;
+                }
+                doc.setFontSize(fontSize);
+                doc.setFont(undefined, isBold ? 'bold' : 'normal');
+
+                // Quebrar linhas longas
+                const lines = doc.splitTextToSize(text, maxWidth);
+                for (let line of lines) {
+                    if (y > pageHeight - 30) {
+                        doc.addPage();
+                        y = 20;
+                    }
+                    doc.text(line, margin, y);
+                    y += fontSize * 0.5;
+                }
+            }
+
+            function addField(label, value, defaultText = '(não informado)') {
+                addText(`${label}: ${value || defaultText}`, 10);
+            }
+
+            // Função específica para campos com checkbox "Não lembro"
+            function addFieldDontRemember(label, value) {
+                const text = value === 'Não lembro' ? 'Não lembra' : (value || 'Não lembra');
+                addText(`${label}: ${text}`, 10);
+            }
+
+            // Função específica para sistemas (Sim/Não)
+            function addHealthSystem(label, escolha, detalhes) {
+                if (escolha === 'sim' && detalhes) {
+                    addText(`${label}: ${detalhes}`, 10);
+                } else if (escolha === 'nao' || !escolha) {
+                    addText(`${label}: Nega problemas`, 10);
+                } else {
+                    addText(`${label}: ${detalhes || 'Nega problemas'}`, 10);
+                }
+            }
+
+            // Função para convênios
+            function addInsurance(label, value) {
+                const text = value === 'Não possui' ? 'Não possui' : (value || 'Não possui');
+                addText(`${label}: ${text}`, 10);
+            }
+
+            function addSection(title) {
+                y += 5;
+                addText(title, 14, true);
+                y += 3;
+            }
+
+            // ==========================================
+            // CABEÇALHO
+            // ==========================================
+            addText('UAO - UNIDADE DE ATENÇÃO OROFACIAL', 16, true);
+            y += 2;
+            addText('Dr. Pedro Pinto Berenguer - CRO-BA 8322', 12);
+            addText('Especialista em Cirurgia e Traumatologia Bucomaxilofacial', 10);
+            addText('Prontuário Digital de Anamnese', 12, true);
+            y += 5;
+
+            const dataHora = new Date().toLocaleString('pt-BR', {
+                dateStyle: 'full',
+                timeStyle: 'short'
+            });
+            addText(`Data/Hora de Preenchimento: ${dataHora}`, 9);
+
+            // ==========================================
+            // SEÇÃO 1: DADOS PESSOAIS
+            // ==========================================
+            addSection('1. DADOS PESSOAIS');
+
+            addField('Nome Completo', dados.nome);
+            addField('Data de Nascimento', dados.dataNascimento);
+            addField('Sexo', dados.sexo);
+            addField('Estado Civil', dados.estadoCivil);
+            addField('Peso (kg)', dados.peso);
+            addField('Altura (cm)', dados.altura);
+            addField('Naturalidade', dados.naturalidade);
+            addField('Profissão', dados.profissao);
+            addField('Religião', dados.religiao);
+            addField('Cor da Pele', dados.corPele);
+
+            // Documento
+            addField('Residente no Brasil', dados.residenteBrasil === 'sim' ? 'Sim' : 'Não');
+            if (dados.cpf) addField('CPF', dados.cpf);
+            if (dados.passaporte) addField('Passaporte', dados.passaporte);
+            if (dados.pais) addField('País de Origem', dados.pais);
+
+            // Convênios (com lógica "Não possui")
+            addInsurance('Convênio Médico/Hospitalar', dados.convenioMedico);
+            addInsurance('Convênio Odontológico', dados.convenioOdontologico);
+
+            // ==========================================
+            // SEÇÃO 2: CONTATO E ENDEREÇO
+            // ==========================================
+            addSection('2. CONTATO E ENDEREÇO');
+
+            addField('Celular', dados.celular);
+            addField('Telefone Residencial', dados.telefoneResidencial);
+            addField('E-mail', dados.email);
+            addField('CEP', dados.cep);
+            addField('Endereço', dados.endereco);
+            addField('Número', dados.numero);
+            addField('Complemento', dados.complemento);
+            addField('Bairro', dados.bairro);
+            addField('Cidade', dados.cidade);
+            addField('Quem indicou', dados.quemIndicou);
+
+            // ==========================================
+            // SEÇÃO 3: HISTÓRICO MÉDICO
+            // ==========================================
+            addSection('3. HISTÓRICO MÉDICO');
+
+            addField('Queixa Principal', dados.queixaPrincipal);
+            addField('Última Avaliação Médica', dados.ultimaAvaliacaoMedica);
+
+            // Campos com "Não lembra"
+            addFieldDontRemember('Última vez que esteve doente', dados.ultimaDoenca);
+            addFieldDontRemember('Hospitalização nos últimos 5 anos', dados.hospitalizacao);
+
+            // Tratamento atual (Sim/Não normal)
+            if (dados.tratamentoAtual_escolha === 'sim' && dados.tratamentoAtual) {
+                addField('Tratamento médico atual', dados.tratamentoAtual);
+            } else if (dados.tratamentoAtual_escolha === 'nao') {
+                addField('Tratamento médico atual', 'Não');
+            } else {
+                addField('Tratamento médico atual', dados.tratamentoAtual);
+            }
+
+            // ==========================================
+            // SEÇÃO 4: CONDIÇÕES DE SAÚDE
+            // ==========================================
+            addSection('4. CONDIÇÕES DE SAÚDE ESPECÍFICAS');
+
+            addHealthSystem('Cardiovascular', dados.cardiovascular_escolha, dados.cardiovascular);
+            addHealthSystem('Sistema Nervoso', dados.nervoso_escolha, dados.nervoso);
+            addHealthSystem('Endócrino', dados.endocrino_escolha, dados.endocrino);
+            addHealthSystem('Respiratório', dados.respiratorio_escolha, dados.respiratorio);
+            addHealthSystem('Digestório', dados.digestivo_escolha, dados.digestivo);
+            addHealthSystem('Renal/Urinário', dados.renal_escolha, dados.renal);
+            addHealthSystem('Ósseo', dados.osseo_escolha, dados.osseo);
+
+            // ==========================================
+            // SEÇÃO 5: MEDICAMENTOS E ALERGIAS
+            // ==========================================
+            addSection('5. MEDICAMENTOS E ALERGIAS');
+
+            // Medicamentos (Sim/Não)
+            if (dados.medicamentos_escolha === 'sim' && dados.medicamentos) {
+                addField('Medicamentos em uso', dados.medicamentos);
+            } else if (dados.medicamentos_escolha === 'nao') {
+                addField('Medicamentos em uso', 'Não utiliza medicamentos');
+            } else {
+                addField('Medicamentos em uso', dados.medicamentos || 'Não utiliza medicamentos');
+            }
+
+            // Alergias (Sim/Não)
+            if (dados.alergias_escolha === 'sim' && dados.alergias) {
+                addField('Alergias', dados.alergias);
+            } else if (dados.alergias_escolha === 'nao') {
+                addField('Alergias', 'Não possui alergias');
+            } else {
+                addField('Alergias', dados.alergias || 'Não possui alergias');
+            }
+
+            // ==========================================
+            // SEÇÃO 6: HISTÓRICO ODONTOLÓGICO
+            // ==========================================
+            addSection('6. HISTÓRICO ODONTOLÓGICO');
+
+            // Outras condições
+            if (dados.outrasCondicoes_escolha === 'sim' && dados.outrasCondicoes) {
+                addField('Outras condições', dados.outrasCondicoes);
+            } else {
+                addField('Outras condições', 'Nega outras condições de saúde');
+            }
+
+            // Problemas dentários anteriores
+            if (dados.problemasDentarios_escolha === 'sim' && dados.problemasDentarios) {
+                addField('Problemas em tratamentos anteriores', dados.problemasDentarios);
+            } else {
+                addField('Problemas em tratamentos anteriores', 'Nega problemas com tratamentos odontológicos anteriores');
+            }
+
+            // ==========================================
+            // SEÇÃO 7: QUESTÕES ESPECÍFICAS (se aplicável)
+            // ==========================================
+            if (dados.sexo === 'F' || dados.sexo === 'outro') {
+                addSection('7. QUESTÕES ESPECÍFICAS');
+                addField('Gravidez', dados.gravidez);
+                addField('Amamentação', dados.amamentacao);
+                addField('Anticoncepcional', dados.anticoncepcional);
+            }
+
+            // ==========================================
+            // SEÇÃO 8: ASSINATURA DIGITAL
+            // ==========================================
+            addSection('8. TERMO DE CONSENTIMENTO E ASSINATURA');
+
+            addText('Certifico que li e respondi o questionário sobre minha história médica-odontológica. Minhas perguntas sobre o questionário, se existiram, foram respondidas satisfatoriamente.', 9);
+            y += 3;
+            addText('Autorizo a digitalização deste para arquivamento em prontuário digital e afirmo ter assinado apenas após a confirmação de todas as informações ao final da minha consulta inicial.', 9);
+            y += 3;
+            addText('Comprometo-me a informar ao meu cirurgião-dentista assistente a mudança de qualquer informação aqui prestada para que atualize o meu prontuário se necessário.', 9);
+            y += 5;
+
+            if (dados.assinaturaDigital) {
+                addText('✓ ASSINADO DIGITALMENTE', 11, true);
+                addField('Nome', dados.nome);
+
+                // Data da assinatura - usar data atual se não tiver
+                const dataAssinatura = dados.dataAssinatura || new Date().toLocaleDateString('pt-BR', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric'
+                });
+                addField('Data', dataAssinatura);
+
+                if (dados.assinaturaHash) addField('Hash SHA-256', dados.assinaturaHash.substring(0, 64), '');
+                if (dados.assinaturaIP) addField('IP', dados.assinaturaIP, '');
+                if (dados.assinaturaTimestamp) addField('Timestamp', dados.assinaturaTimestamp, '');
+            }
+
+            // ==========================================
+            // RODAPÉ
+            // ==========================================
+            y += 10;
+            addText('_______________________________________________', 10);
+            addText('Documento gerado automaticamente pelo Sistema UAO', 8);
+            addText(`Idioma do preenchimento: ${dados.idioma || 'pt'}`, 8);
+
+            return doc.output('blob');
+        }
+
+        // ==========================================
+        // UPLOAD DROPBOX
+        // ==========================================
+
+        async function uploadToDropbox(blob, fileName) {
+            const path = `${DROPBOX_CONFIG.folder}/${fileName}`;
+
+            try {
+                const response = await fetch('https://content.dropboxapi.com/2/files/upload', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${DROPBOX_CONFIG.token}`,
+                        'Dropbox-API-Arg': JSON.stringify({
+                            path: path,
+                            mode: 'add',
+                            autorename: true,
+                            mute: false
+                        }),
+                        'Content-Type': 'application/octet-stream'
+                    },
+                    body: blob
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(`Dropbox error: ${error.error_summary}`);
+                }
+
+                const result = await response.json();
+                console.log('✅ Arquivo salvo no Dropbox:', result.path_display);
+                return result;
+
+            } catch (error) {
+                console.error('❌ Erro no upload:', error);
+                throw error;
+            }
+        }
+
+        function limparFormulario() {
+            if (confirm('Tem certeza que deseja limpar todos os dados?')) {
+                document.getElementById('anamneseForm').reset();
+                if (signaturePad) {
+                    signaturePad.clear();
+                    document.getElementById('signaturePlaceholder').classList.remove('hidden');
+                }
+                document.getElementById('successMessage').classList.remove('active');
+                document.getElementById('anamneseForm').style.display = 'block';
+                localStorage.removeItem('prontuario_draft');
+
+                // Preencher data novamente
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('dataAssinatura').value = today;
+            }
+        }
+
+        function limparAssinatura() {
+            if (signaturePad) {
+                signaturePad.clear();
+                document.getElementById('signaturePlaceholder').classList.remove('hidden');
+                document.getElementById('assinaturaDigitalData').value = '';
+                document.getElementById('assinaturaHash').value = '';
+                document.getElementById('assinaturaTimestamp').value = '';
+                console.log('🗑️ Assinatura limpa');
+            }
+        }
+
+        // ==========================================
+        // INICIALIZAÇÃO
+        // ==========================================
+
+        console.log('🌍 Sistema Multilíngue UAO Iniciado');
+        console.log('📋 10 idiomas disponíveis');
+        console.log('💾 Auto-save ativado');
+        console.log('✅ Validações inteligentes');
+        console.log('🏠 CEP automático');
+        console.log('🚀 Sistema pronto para uso!');
+    </script>
+</body>
+
+</html>
